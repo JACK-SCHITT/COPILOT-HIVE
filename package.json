@@ -1,0 +1,1054 @@
+{
+  "name": "copilot-hive",
+  "displayName": "Copilot Hive",
+  "description": "Universal Hive inside GitHub Copilot. Frozen Prime Directive, agent registry, planner, and the GitHub account desk.",
+  "version": "1.0.0",
+  "publisher": "JACK-SCHITT",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Other"
+  ],
+  "keywords": [
+    "copilot",
+    "hive",
+    "github",
+    "krackerjack"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "chatParticipants": [
+      {
+        "id": "hive",
+        "name": "hive",
+        "fullName": "Copilot Hive",
+        "description": "Hive law, agents, and your GitHub account.",
+        "isSticky": true,
+        "commands": [
+          {
+            "name": "seed",
+            "description": "Answer under the frozen Prime Directive"
+          },
+          {
+            "name": "agents",
+            "description": "List or save a specialization"
+          },
+          {
+            "name": "plan",
+            "description": "Show the hive plan checklist"
+          },
+          {
+            "name": "github",
+            "description": "Run a GitHub account action"
+          }
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "copilotHive.signIn",
+        "title": "Copilot Hive: Sign in to GitHub"
+      },
+      {
+        "command": "copilotHive.seed",
+        "title": "Copilot Hive: Ask the seed"
+      },
+      {
+        "command": "copilotHive.open",
+        "title": "Copilot Hive: Open cockpit"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "hive",
+          "title": "Copilot Hive",
+          "icon": "media/hive.svg"
+        }
+      ]
+    },
+    "views": {
+      "hive": [
+        {
+          "id": "copilotHive.cockpit",
+          "name": "Cockpit",
+          "type": "webview"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Copilot Hive",
+      "properties": {
+        "copilotHive.confirmWrites": {
+          "type": "boolean",
+          "default": true,
+          "description": "Ask before GitHub writes from chat. Language-model tools still use the editor confirmation."
+        }
+      }
+    },
+    "languageModelTools": [
+      {
+        "name": "hive_seed",
+        "displayName": "hive seed",
+        "modelDescription": "Answer under the frozen Prime Directive. Refuses rewrite, flood, second-master, and account-takeover requests.",
+        "toolReferenceName": "hiveSeed",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(shield)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "prompt": {
+              "type": "string",
+              "description": "Question for the seed"
+            },
+            "agent": {
+              "type": "string",
+              "description": "Agent name. Empty specialization means base only."
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_agents",
+        "displayName": "hive agents",
+        "modelDescription": "List hive agents. Pass save=true with agent and prompt to store an operator specialization. Specializations are never inherited automatically.",
+        "toolReferenceName": "hiveAgents",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(shield)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "agent": {
+              "type": "string",
+              "description": "Agent id"
+            },
+            "prompt": {
+              "type": "string",
+              "description": "Specialization text to save"
+            },
+            "save": {
+              "type": "boolean",
+              "description": "Save the specialization for this operator"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_plan",
+        "displayName": "hive plan",
+        "modelDescription": "Validate a hive plan. Needs a base, a role, and at least one package. This is a checklist, not an installer.",
+        "toolReferenceName": "hivePlan",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(shield)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "base": {
+              "type": "string",
+              "description": "Planning base"
+            },
+            "role": {
+              "type": "string",
+              "description": "One role"
+            },
+            "packages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Plan sections"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_me",
+        "displayName": "hive github me",
+        "modelDescription": "Return the signed-in GitHub user. Same job as reading the account profile.",
+        "toolReferenceName": "hiveGithubMe",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_repos",
+        "displayName": "hive github repos",
+        "modelDescription": "List repositories for a user, or the signed-in user when login is omitted.",
+        "toolReferenceName": "hiveGithubRepos",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "login": {
+              "type": "string",
+              "description": "GitHub login. Omit for the signed-in account."
+            },
+            "perPage": {
+              "type": "number"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_search_repos",
+        "displayName": "hive github search repos",
+        "modelDescription": "Search repositories with GitHub search syntax.",
+        "toolReferenceName": "hiveGithubSearchRepos",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_search_code",
+        "displayName": "hive github search code",
+        "modelDescription": "Search code the signed-in account can see.",
+        "toolReferenceName": "hiveGithubSearchCode",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Code search query, include repo:owner/name when you can"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_search_commits",
+        "displayName": "hive github search commits",
+        "modelDescription": "Search commit messages. Scope with repo:owner/name.",
+        "toolReferenceName": "hiveGithubSearchCommits",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Commit search query"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_file",
+        "displayName": "hive github file",
+        "modelDescription": "Read a file or list a directory.",
+        "toolReferenceName": "hiveGithubFile",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            },
+            "path": {
+              "type": "string",
+              "description": "Path, empty for root"
+            },
+            "ref": {
+              "type": "string",
+              "description": "Branch, tag, or sha"
+            }
+          },
+          "required": [
+            "owner",
+            "repo"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_tree",
+        "displayName": "hive github tree",
+        "modelDescription": "List the git tree for a repository ref.",
+        "toolReferenceName": "hiveGithubTree",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            },
+            "ref": {
+              "type": "string",
+              "description": "Ref, default branch if omitted"
+            }
+          },
+          "required": [
+            "owner",
+            "repo"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_issues",
+        "displayName": "hive github issues",
+        "modelDescription": "List issues in a repository.",
+        "toolReferenceName": "hiveGithubIssues",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            },
+            "state": {
+              "type": "string",
+              "description": "open, closed, or all"
+            }
+          },
+          "required": [
+            "owner",
+            "repo"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_pulls",
+        "displayName": "hive github pulls",
+        "modelDescription": "List pull requests.",
+        "toolReferenceName": "hiveGithubPulls",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            },
+            "state": {
+              "type": "string",
+              "description": "open, closed, or all"
+            }
+          },
+          "required": [
+            "owner",
+            "repo"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_pull",
+        "displayName": "hive github pull",
+        "modelDescription": "Read one pull request.",
+        "toolReferenceName": "hiveGithubPull",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            },
+            "number": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "number"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_branches",
+        "displayName": "hive github branches",
+        "modelDescription": "List branches.",
+        "toolReferenceName": "hiveGithubBranches",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            }
+          },
+          "required": [
+            "owner",
+            "repo"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_releases",
+        "displayName": "hive github releases",
+        "modelDescription": "List releases.",
+        "toolReferenceName": "hiveGithubReleases",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            }
+          },
+          "required": [
+            "owner",
+            "repo"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_tags",
+        "displayName": "hive github tags",
+        "modelDescription": "List git tags.",
+        "toolReferenceName": "hiveGithubTags",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            }
+          },
+          "required": [
+            "owner",
+            "repo"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_commit",
+        "displayName": "hive github commit",
+        "modelDescription": "Read one commit, or the latest commits when sha is omitted.",
+        "toolReferenceName": "hiveGithubCommit",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            },
+            "sha": {
+              "type": "string",
+              "description": "Commit sha. Omit for the latest list."
+            }
+          },
+          "required": [
+            "owner",
+            "repo"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_actions",
+        "displayName": "hive github actions",
+        "modelDescription": "List Actions workflows and recent runs.",
+        "toolReferenceName": "hiveGithubActions",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            }
+          },
+          "required": [
+            "owner",
+            "repo"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_dependabot",
+        "displayName": "hive github dependabot",
+        "modelDescription": "List Dependabot alerts the account is allowed to see.",
+        "toolReferenceName": "hiveGithubDependabot",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            },
+            "state": {
+              "type": "string",
+              "description": "open, fixed, dismissed, or auto_dismissed"
+            }
+          },
+          "required": [
+            "owner",
+            "repo"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_projects",
+        "displayName": "hive github projects",
+        "modelDescription": "List GitHub Projects v2 for a user.",
+        "toolReferenceName": "hiveGithubProjects",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "login": {
+              "type": "string",
+              "description": "User login. Defaults to the signed-in account."
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_notifications",
+        "displayName": "hive github notifications",
+        "modelDescription": "List notifications for the signed-in account.",
+        "toolReferenceName": "hiveGithubNotifications",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_gists",
+        "displayName": "hive github gists",
+        "modelDescription": "List gists for the signed-in account.",
+        "toolReferenceName": "hiveGithubGists",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(github)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_create_issue",
+        "displayName": "hive github create issue",
+        "modelDescription": "Create one issue after the operator confirms. Refuses bulk or flood wording.",
+        "toolReferenceName": "hiveGithubCreateIssue",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(git-commit)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            },
+            "title": {
+              "type": "string",
+              "description": "Title"
+            },
+            "body": {
+              "type": "string",
+              "description": "Body"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "title"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_create_pr",
+        "displayName": "hive github create pr",
+        "modelDescription": "Open one pull request after confirm.",
+        "toolReferenceName": "hiveGithubCreatePr",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(git-commit)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            },
+            "title": {
+              "type": "string",
+              "description": "Title"
+            },
+            "head": {
+              "type": "string",
+              "description": "Head branch"
+            },
+            "base": {
+              "type": "string",
+              "description": "Base branch"
+            },
+            "body": {
+              "type": "string",
+              "description": "Body"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "title",
+            "head",
+            "base"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_comment",
+        "displayName": "hive github comment",
+        "modelDescription": "Comment once on an issue or pull request.",
+        "toolReferenceName": "hiveGithubComment",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(git-commit)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            },
+            "number": {
+              "type": "number"
+            },
+            "body": {
+              "type": "string",
+              "description": "Comment"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "number",
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_create_branch",
+        "displayName": "hive github create branch",
+        "modelDescription": "Create a branch from an existing ref. Does not force-push.",
+        "toolReferenceName": "hiveGithubCreateBranch",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(git-commit)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            },
+            "branch": {
+              "type": "string",
+              "description": "New branch"
+            },
+            "from": {
+              "type": "string",
+              "description": "Source branch or sha"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "branch",
+            "from"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_upsert_file",
+        "displayName": "hive github upsert file",
+        "modelDescription": "Create or update one text file on a branch.",
+        "toolReferenceName": "hiveGithubUpsertFile",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(git-commit)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            },
+            "path": {
+              "type": "string",
+              "description": "File path"
+            },
+            "content": {
+              "type": "string",
+              "description": "UTF-8 text, max 100kb"
+            },
+            "message": {
+              "type": "string",
+              "description": "Commit message"
+            },
+            "branch": {
+              "type": "string",
+              "description": "Branch"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "path",
+            "content"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_push_files",
+        "displayName": "hive github push files",
+        "modelDescription": "Commit up to 15 text files in one push. No force.",
+        "toolReferenceName": "hiveGithubPushFiles",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(git-commit)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            },
+            "branch": {
+              "type": "string",
+              "description": "Branch. Defaults to the default branch."
+            },
+            "message": {
+              "type": "string",
+              "description": "Commit message"
+            },
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Path"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "UTF-8 text"
+                  }
+                },
+                "required": [
+                  "path",
+                  "content"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "files"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_create_repo",
+        "displayName": "hive github create repo",
+        "modelDescription": "Create one repository on the signed-in account.",
+        "toolReferenceName": "hiveGithubCreateRepo",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(git-commit)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "description": {
+              "type": "string",
+              "description": "Description"
+            },
+            "private": {
+              "type": "boolean",
+              "description": "Private repo. Default false."
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_merge",
+        "displayName": "hive github merge",
+        "modelDescription": "Merge one pull request with a merge commit. No force, no squash unless method is set to squash or rebase.",
+        "toolReferenceName": "hiveGithubMerge",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(git-commit)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            },
+            "number": {
+              "type": "number"
+            },
+            "method": {
+              "type": "string",
+              "description": "merge, squash, or rebase"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "number"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_star",
+        "displayName": "hive github star",
+        "modelDescription": "Star or unstar one repository.",
+        "toolReferenceName": "hiveGithubStar",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(git-commit)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            },
+            "remove": {
+              "type": "boolean",
+              "description": "Unstar when true"
+            }
+          },
+          "required": [
+            "owner",
+            "repo"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_gist",
+        "displayName": "hive github gist",
+        "modelDescription": "Create one secret gist.",
+        "toolReferenceName": "hiveGithubGist",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(git-commit)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filename": {
+              "type": "string",
+              "description": "File name"
+            },
+            "content": {
+              "type": "string",
+              "description": "Text"
+            },
+            "description": {
+              "type": "string",
+              "description": "Description"
+            },
+            "public": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "filename",
+            "content"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hive_github_copilot_review",
+        "displayName": "hive github copilot review",
+        "modelDescription": "Comment @copilot on an issue or pull so GitHub Copilot can pick up the review. One comment only.",
+        "toolReferenceName": "hiveGithubCopilotReview",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(git-commit)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Owner"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repo"
+            },
+            "number": {
+              "type": "number"
+            },
+            "note": {
+              "type": "string",
+              "description": "What to review"
+            }
+          },
+          "required": [
+            "owner",
+            "repo",
+            "number"
+          ],
+          "additionalProperties": false
+        }
+      }
+    ]
+  }
+}

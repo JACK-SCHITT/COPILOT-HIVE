@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "copilot-hive": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["mcp/server.mjs"]
+    }
+  }
+}
